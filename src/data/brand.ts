@@ -1,0 +1,1 @@
+export const LOGO_URL = "/Logo_3.png";

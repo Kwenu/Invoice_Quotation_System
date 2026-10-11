@@ -1,0 +1,122 @@
+import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRightIcon } from 'lucide-react';
+import { useData } from '../../contexts/DataContext';
+import { useDueItems } from '../../hooks/useDueItems';
+import { whenLabel } from '../../utils/dueItems';
+import { formatDisplayDate, formatMoney, todayIso } from '../../utils/format';
+import { computeIncome, monthlyTrend, resolvePeriod, type PeriodPreset } from '../../utils/income';
+import { SegmentedTabs } from '../ui/SegmentedTabs';
+
+export function IncomeSummary() {
+  const { documents, retainers, payouts, settings } = useData();
+  const { items } = useDueItems();
+  const currency = settings.currencySymbol;
+  const [preset, setPreset] = useState<PeriodPreset>('this-month');
+  const [month, setMonth] = useState(todayIso().slice(0, 7));
+
+  const period = useMemo(() => resolvePeriod(preset, month), [preset, month]);
+  const data = useMemo(() => ({ documents, retainers, payouts }), [documents, retainers, payouts]);
+  const s = useMemo(() => computeIncome(data, period), [data, period]);
+  const trend = useMemo(() => monthlyTrend(data, 6), [data]);
+  const maxTrend = Math.max(1, ...trend.map((t) => t.income));
+  const upcoming = items.filter((i) => i.daysAway <= 30).slice(0, 6);
+
+  const toReceive = s.outstanding + s.maintenanceOverdue;
+
+  const cards = [
+  { label: 'Income received', value: s.income, tone: 'text-success', sub: `Invoices ${formatMoney(s.invoiceIncome, currency)} · Maintenance ${formatMoney(s.maintenanceIncome, currency)}` },
+  { label: 'Billed in period', value: s.billed, tone: 'text-ink', sub: 'Invoices issued (excluding drafts)' },
+  { label: 'Payments to receive', value: toReceive, tone: 'text-ink', sub: `${formatMoney(s.overdue + s.maintenanceOverdue, currency)} overdue · ${formatMoney(s.dueInPeriod, currency)} invoices due in period` },
+  { label: 'Maintenance expected', value: s.maintenanceExpected, tone: 'text-ink', sub: period.to ? 'Upcoming charges in this period' : 'Upcoming charges' },
+  { label: 'Paid to team', value: s.payoutsPaid, tone: 'text-ink', sub: 'Payouts recorded in period' },
+  { label: 'Net after team payouts', value: s.net, tone: s.net < 0 ? 'text-danger' : 'text-ink', sub: 'Income received − team payouts' }];
+
+
+  return (
+    <section aria-labelledby="income-summary" className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 id="income-summary" className="text-lg font-semibold text-ink">Income summary</h2>
+          <p className="text-sm text-ink-muted">{period.label}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <SegmentedTabs
+            variant="pill"
+            label="Summary period"
+            value={preset}
+            onChange={setPreset}
+            items={[
+            { id: 'this-month', label: 'This month' },
+            { id: 'last-month', label: 'Last month' },
+            { id: 'this-year', label: 'This year' },
+            { id: 'all', label: 'All time' },
+            { id: 'month', label: 'Pick month' }]
+            } />
+          
+          {preset === 'month' &&
+          <>
+              <label htmlFor="summary-month" className="sr-only">Month</label>
+              <input
+              id="summary-month"
+              type="month"
+              value={month}
+              onChange={(e) => e.target.value && setMonth(e.target.value)}
+              className="h-9 rounded-lg border border-line bg-white px-3 text-sm text-ink focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-blue/20" />
+            
+            </>
+          }
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {cards.map((c) =>
+        <div key={c.label} className="rounded-2xl border border-line bg-white p-5">
+            <p className="text-xs font-medium text-ink-muted">{c.label}</p>
+            <p className={`mt-2 text-2xl font-semibold tabular-nums ${c.tone}`}>{formatMoney(c.value, currency)}</p>
+            <p className="mt-1 text-xs text-ink-muted">{c.sub}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-5">
+        <div className="rounded-2xl border border-line bg-white p-5 lg:col-span-3">
+          <p className="text-sm font-semibold text-ink">Income received — last 6 months</p>
+          <div className="mt-5 flex h-40 items-end gap-3" role="img" aria-label="Income received per month, last six months">
+            {trend.map((t) =>
+            <div key={t.key} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
+                <span className="text-[10px] tabular-nums text-ink-muted">{t.income > 0 ? Math.round(t.income).toLocaleString('en-US') : ''}</span>
+                <div className="w-full max-w-12 rounded-t-md bg-lingo" style={{ height: `${Math.max(t.income / maxTrend * 100, t.income > 0 ? 3 : 0)}%`, minHeight: t.income > 0 ? 4 : 0 }} />
+                <span className="text-xs text-ink-muted">{t.label}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-line bg-white lg:col-span-2">
+          <div className="flex items-center justify-between px-5 py-4">
+            <p className="text-sm font-semibold text-ink">Coming up — next 30 days</p>
+            <Link to="/maintenance" className="inline-flex items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink">Maintenance <ArrowRightIcon className="h-3.5 w-3.5" aria-hidden /></Link>
+          </div>
+          {upcoming.length === 0 ?
+          <p className="border-t border-line px-5 py-8 text-center text-sm text-ink-muted">Nothing due in the next 30 days.</p> :
+          <ul className="divide-y divide-line border-t border-line">
+              {upcoming.map((i) =>
+            <li key={i.id}>
+                  <Link to={i.to} className="flex items-center gap-3 px-5 py-3 transition-colors duration-150 hover:bg-canvas/70">
+                    <span className={`h-2 w-2 shrink-0 rounded-full ${i.overdue ? 'bg-danger' : i.remind ? 'bg-warning' : 'bg-success'}`} aria-hidden />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-ink">{i.title}</p>
+                      <p className={`text-xs ${i.overdue ? 'text-danger' : 'text-ink-muted'}`}>{whenLabel(i.daysAway)} · {formatDisplayDate(i.date)}</p>
+                    </div>
+                    <span className="shrink-0 text-sm tabular-nums text-ink">{formatMoney(i.amount, currency)}</span>
+                  </Link>
+                </li>
+            )}
+            </ul>
+          }
+        </div>
+      </div>
+    </section>);
+
+}
