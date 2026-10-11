@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { DatabaseIcon, LogOutIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon } from 'lucide-react';
+import { CloudCheckIcon, CloudOffIcon, DatabaseIcon, LogOutIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useData } from '../../contexts/DataContext';
 import { navigationItems } from '../../data/navigation';
 import { initials } from '../../utils/format';
 import { buttonClasses } from '../ui/buttonStyles';
@@ -12,6 +13,37 @@ import { NotificationBell } from './NotificationBell';
 interface SidebarProps {
   collapsed?: boolean;
   onToggle?: () => void;
+}
+
+function StorageStatus() {
+  const { storageMode, syncStatus, syncError, retrySync } = useData();
+
+  if (storageMode === 'prototype-local') {
+    return (
+      <div className="mx-3 mb-3 rounded-xl border border-dashed border-line-strong p-3">
+        <p className="flex items-center gap-1.5 text-xs font-semibold text-ink-soft">
+          <DatabaseIcon className="h-3.5 w-3.5" aria-hidden />
+          Prototype storage
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-ink-muted">Records are kept in this browser only. Add your Supabase keys to store them in the cloud.</p>
+      </div>);
+
+  }
+
+  const failed = syncStatus === 'error';
+  return (
+    <div className={`mx-3 mb-3 rounded-xl border p-3 ${failed ? 'border-danger/30 bg-danger-soft' : 'border-line bg-canvas/60'}`}>
+      <p className={`flex items-center gap-1.5 text-xs font-semibold ${failed ? 'text-danger' : 'text-ink-soft'}`}>
+        {failed ? <CloudOffIcon className="h-3.5 w-3.5" aria-hidden /> : <CloudCheckIcon className="h-3.5 w-3.5" aria-hidden />}
+        {failed ? 'Not saved to cloud' : syncStatus === 'saving' ? 'Saving…' : 'Saved to cloud'}
+      </p>
+      {failed ?
+      <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+          {syncError} <button type="button" onClick={retrySync} className="font-medium underline">Retry now</button>
+        </p> :
+      <p className="mt-1 text-xs leading-relaxed text-ink-muted">Stored in your Supabase database.</p>}
+    </div>);
+
 }
 
 export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
@@ -88,15 +120,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
         )}
       </nav>
 
-      <div className="mx-3 mb-3 rounded-xl border border-dashed border-line-strong p-3">
-        <p className="flex items-center gap-1.5 text-xs font-semibold text-ink-soft">
-          <DatabaseIcon className="h-3.5 w-3.5" aria-hidden />
-          Prototype storage
-        </p>
-        <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-          Records are kept in this browser only. Connect Supabase to store them securely.
-        </p>
-      </div>
+      <StorageStatus />
 
       <div className="flex items-center gap-3 border-t border-line px-4 py-3">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-canvas text-xs font-semibold text-ink-soft">

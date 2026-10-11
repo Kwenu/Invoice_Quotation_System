@@ -19,27 +19,27 @@ export interface AppData {
 }
 
 /**
- * Persistence boundary for the whole app.
+ * Persistence boundary for the whole app. Two implementations:
+ *  - supabaseRepository (utils/supabaseRepository.ts) — used when VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY are set.
+ *  - prototypeRepository (below) — browser localStorage only; used when Supabase is not configured.
  *
- * PROTOTYPE: `prototypeRepository` keeps data in this browser's localStorage — temporary, per-device,
- * and NOT a secure store for financial records.
- *
- * PRODUCTION: implement this interface with Supabase (schema in data/supabaseSchema.ts):
- *  - load/save map to the clients, documents, payments, document_history and app_settings tables
- *  - document numbers come from the `allocate_document_number` Postgres function (row-locked, duplicate-safe)
- *  - row level security restricts all access to authenticated administrators
- *  - only VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are exposed to the frontend; never a service-role key
+ * `save` receives the last state known to be persisted and the new state, so a remote store only writes what changed.
  */
 export interface DataRepository {
-  load(): AppData;
-  save(data: AppData): void;
-  reset(): AppData;
+  mode: 'supabase' | 'prototype-local';
+  load(): Promise<AppData>;
+  save(prev: AppData, next: AppData): Promise<void>;
 }
 
 const STORAGE_KEY = 'lingo-billing:prototype-data:v1';
 const RECOVERY_PREFIX = 'lingo-billing:editor-recovery:';
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+
+/** A blank workspace: default settings, no sample records. Used for a fresh Supabase database. */
+export function createEmptyData(): AppData {
+  return { version: 1, clients: [], documents: [], settings: clone(defaultSettings), team: [], assignments: [], payouts: [], retainers: [] };
+}
 
 export function createSeedData(): AppData {
   return {
@@ -54,7 +54,7 @@ export function createSeedData(): AppData {
   };
 }
 
-function mergeSettings(stored: Partial<AppSettings> | undefined): AppSettings {
+export function mergeSettings(stored: Partial<AppSettings> | undefined): AppSettings {
   const base = clone(defaultSettings);
   if (!stored) return base;
   return {
@@ -66,38 +66,50 @@ function mergeSettings(stored: Partial<AppSettings> | undefined): AppSettings {
   };
 }
 
+function readStored(): AppData | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as AppData;
+    if (parsed.version !== 1) return null;
+    return {
+      ...parsed,
+      settings: mergeSettings(parsed.settings),
+      // Older backups were saved before these sections existed.
+      team: parsed.team ?? [],
+      assignments: parsed.assignments ?? [],
+      payouts: parsed.payouts ?? [],
+      retainers: parsed.retainers ?? []
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Data this browser saved while running in prototype mode, or null if nothing was ever saved. Used for the one-time upload to Supabase. */
+export const readLocalPrototypeData = readStored;
+
+/** Synchronous load, so prototype mode renders on the first frame exactly like before. */
+export const loadPrototypeSync = (): AppData => readStored() ?? createSeedData();
+
 export const prototypeRepository: DataRepository = {
-  load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return createSeedData();
-      const parsed = JSON.parse(raw) as AppData;
-      if (parsed.version !== 1) return createSeedData();
-      return {
-        ...parsed,
-        settings: mergeSettings(parsed.settings),
-        // Older backups were saved before these sections existed.
-        team: parsed.team ?? [],
-        assignments: parsed.assignments ?? [],
-        payouts: parsed.payouts ?? [],
-        retainers: parsed.retainers ?? []
-      };
-    } catch {
-      return createSeedData();
-    }
+  mode: 'prototype-local',
+  async load() {
+    return loadPrototypeSync();
   },
-  save(data) {
+  async save(_prev, next) {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch (error) {
       console.warn('Prototype storage is full or unavailable', error);
     }
-  },
-  reset() {
-    localStorage.removeItem(STORAGE_KEY);
-    return createSeedData();
   }
 };
+
+export function resetPrototypeData(): AppData {
+  localStorage.removeItem(STORAGE_KEY);
+  return createSeedData();
+}
 
 export interface RecoverySnapshot {
   savedAt: string;

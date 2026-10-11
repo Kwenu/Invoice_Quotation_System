@@ -19,7 +19,7 @@ const features = [
 const ease = [0.23, 1, 0.32, 1] as const;
 
 export function Login() {
-  const { user, signIn } = useAuth();
+  const { user, signIn, mode } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as {from?: string;} | null)?.from ?? '/';
@@ -184,8 +184,9 @@ export function Login() {
             </form>
 
             <p className="mt-6 text-xs leading-relaxed text-ink-muted">
-              Prototype mode: any email with a password of 6+ characters opens a session in this tab. Production sign-in uses Supabase Auth
-              restricted to administrators.
+              {mode === 'supabase' ?
+              'Secure sign-in. Your data is stored in your private Supabase database, so it is the same on every device.' :
+              'Prototype mode (Supabase is not configured): any email with a password of 6+ characters opens a session in this tab, and data stays in this browser only.'}
             </p>
             <p className="mt-8 text-xs text-ink-faint">© {new Date().getFullYear()} Lingo Groups (Pvt) Ltd</p>
           </motion.div>

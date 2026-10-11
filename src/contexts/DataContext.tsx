@@ -1,4 +1,12 @@
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Loader2Icon } from 'lucide-react';
+import { toast } from 'sonner';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { useAuth } from './AuthContext';
+import { Button } from '../components/ui/Button';
+import { seedClients } from '../data/seedClients';
+import { seedDocuments } from '../data/seedDocuments';
+import { hasStoredSettings, supabaseRepository } from '../utils/supabaseRepository';
 import type { Client, ClientInput } from '../types/client';
 import type { LingoDocument, Payment, StoredStatus } from '../types/document';
 import type { AppSettings } from '../types/settings';
@@ -10,10 +18,11 @@ import { cloneAsDraft, documentTypeLabel, invoiceFromQuotation } from '../utils/
 import { formatMoney } from '../utils/format';
 import { createId } from '../utils/id';
 import { allocateNumber } from '../utils/numbering';
-import { prototypeRepository, type AppData, type DataRepository } from '../utils/repository';
+import { createEmptyData, loadPrototypeSync, prototypeRepository, readLocalPrototypeData, resetPrototypeData, type AppData, type DataRepository } from '../utils/repository';
 import { statusMeta } from '../utils/status';
 
 export type SaveIntent = 'draft' | 'final' | 'autosave';
+export type SyncStatus = 'idle' | 'saving' | 'error';
 
 interface DataContextValue {
   settings: AppSettings;
@@ -23,7 +32,13 @@ interface DataContextValue {
   assignments: TeamAssignment[];
   payouts: TeamPayout[];
   retainers: Retainer[];
-  storageMode: 'prototype-local';
+  storageMode: 'supabase' | 'prototype-local';
+  syncStatus: SyncStatus;
+  syncError: string | null;
+  lastSyncedAt: string | null;
+  retrySync: () => void;
+  /** One-time upload of records this browser saved before Supabase was connected. Returns counts, or null if there is nothing to import. */
+  importLocalData: () => Promise<{clients: number;documents: number;team: number;retainers: number;} | null>;
   saveClient: (input: ClientInput) => Client;
   saveDocument: (doc: LingoDocument, intent: SaveIntent) => LingoDocument;
   recordPayment: (docId: string, payment: Omit<Payment, 'id' | 'recordedAt'>) => void;
@@ -49,7 +64,13 @@ interface DataContextValue {
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
-const repository: DataRepository = prototypeRepository;
+const repository: DataRepository = isSupabaseConfigured ? supabaseRepository : prototypeRepository;
+const SAVE_DELAY_MS = repository.mode === 'supabase' ? 600 : 0;
+
+const addMissing = <T extends {id: string;},>(base: T[], extra: T[]) => {
+  const have = new Set(base.map((x) => x.id));
+  return [...base, ...extra.filter((x) => !have.has(x.id))];
+};
 
 const historyEntry = (action: string, detail: string) => ({
   id: createId('hist'),
@@ -59,15 +80,133 @@ const historyEntry = (action: string, detail: string) => ({
 });
 
 export function DataProvider({ children }: {children: ReactNode;}) {
-  const [data, setData] = useState<AppData>(() => repository.load());
+  const { user } = useAuth();
+  const [data, setData] = useState<AppData>(() => isSupabaseConfigured ? createEmptyData() : loadPrototypeSync());
+  const [loadState, setLoadState] = useState<'idle' | 'loading' | 'ready' | 'error'>(isSupabaseConfigured ? 'idle' : 'ready');
+  const [loadError, setLoadError] = useState('');
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+
   // Latest committed state, read synchronously so back-to-back saves never reuse a number.
   const dataRef = useRef(data);
+  // Last state known to be stored. Each save sends the difference between this and dataRef, so a failed
+  // save is simply retried with everything that is still missing.
+  const syncedRef = useRef(data);
+  const flushing = useRef(false);
+  const timer = useRef<number | undefined>(undefined);
+
+  const flush = useCallback(async () => {
+    if (flushing.current) return;
+    flushing.current = true;
+    setSyncStatus('saving');
+    try {
+      while (syncedRef.current !== dataRef.current) {
+        const target = dataRef.current;
+        await repository.save(syncedRef.current, target);
+        syncedRef.current = target;
+      }
+      setSyncError(null);
+      setSyncStatus('idle');
+      setLastSyncedAt(new Date().toISOString());
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not reach the database.';
+      setSyncError(message);
+      setSyncStatus('error');
+      toast.error('Changes are not saved yet', { description: `${message} — they will be retried automatically.`, id: 'sync-error' });
+    } finally {
+      flushing.current = false;
+    }
+  }, []);
+
+  const scheduleFlush = useCallback(() => {
+    window.clearTimeout(timer.current);
+    if (SAVE_DELAY_MS === 0) void flush();else
+    timer.current = window.setTimeout(() => void flush(), SAVE_DELAY_MS);
+  }, [flush]);
 
   const commit = useCallback((next: AppData) => {
     dataRef.current = next;
     setData(next);
-    repository.save(next);
+    scheduleFlush();
+  }, [scheduleFlush]);
+
+  // Supabase mode: load everything after sign-in, clear it on sign-out.
+  const userKey = user?.email ?? null;
+  const loadAll = useCallback(async () => {
+    setLoadState('loading');
+    try {
+      const loaded = await repository.load();
+      dataRef.current = loaded;
+      syncedRef.current = loaded;
+      setData(loaded);
+      setLoadState('ready');
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Could not load your data.');
+      setLoadState('error');
+    }
   }, []);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    if (userKey) {
+      void loadAll();
+    } else {
+      const empty = createEmptyData();
+      dataRef.current = empty;
+      syncedRef.current = empty;
+      setData(empty);
+      setLoadState('idle');
+      setSyncStatus('idle');
+      setSyncError(null);
+    }
+  }, [userKey, loadAll]);
+
+  // Retry when the connection comes back; warn before closing the tab with unsaved changes.
+  useEffect(() => {
+    const onOnline = () => {if (syncedRef.current !== dataRef.current) void flush();};
+    const onUnload = (e: BeforeUnloadEvent) => {
+      if (repository.mode === 'supabase' && syncedRef.current !== dataRef.current) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('online', onOnline);
+    window.addEventListener('beforeunload', onUnload);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('beforeunload', onUnload);
+    };
+  }, [flush]);
+
+  const retrySync = useCallback(() => void flush(), [flush]);
+
+  const importLocalData = useCallback(async () => {
+    const local = readLocalPrototypeData();
+    if (!local) return null;
+    const seededClients = new Set(seedClients.map((c) => c.id));
+    const seededDocs = new Set(seedDocuments.map((d) => d.id));
+    const current = dataRef.current;
+    const keepRemoteSettings = await hasStoredSettings();
+    const merged: AppData = {
+      version: 1,
+      settings: keepRemoteSettings ? current.settings : local.settings,
+      clients: addMissing(current.clients, local.clients.filter((c) => !seededClients.has(c.id))),
+      documents: addMissing(current.documents, local.documents.filter((d) => !seededDocs.has(d.id))),
+      team: addMissing(current.team, local.team),
+      assignments: addMissing(current.assignments, local.assignments),
+      payouts: addMissing(current.payouts, local.payouts),
+      retainers: addMissing(current.retainers, local.retainers)
+    };
+    const counts = {
+      clients: merged.clients.length - current.clients.length,
+      documents: merged.documents.length - current.documents.length,
+      team: merged.team.length - current.team.length,
+      retainers: merged.retainers.length - current.retainers.length
+    };
+    commit(merged);
+    return counts;
+  }, [commit]);
 
   const saveClient = useCallback(
     (input: ClientInput): Client => {
@@ -400,7 +539,10 @@ export function DataProvider({ children }: {children: ReactNode;}) {
     [commit]
   );
 
-  const resetData = useCallback(() => commit(repository.reset()), [commit]);
+  // Reset only exists for the browser-only prototype; a real database is never wiped from the UI.
+  const resetData = useCallback(() => {
+    if (repository.mode === 'prototype-local') commit(resetPrototypeData());
+  }, [commit]);
   const exportData = useCallback(() => dataRef.current, []);
 
   const value = useMemo<DataContextValue>(
@@ -412,7 +554,12 @@ export function DataProvider({ children }: {children: ReactNode;}) {
       assignments: data.assignments,
       payouts: data.payouts,
       retainers: data.retainers,
-      storageMode: 'prototype-local',
+      storageMode: repository.mode,
+      syncStatus,
+      syncError,
+      lastSyncedAt,
+      retrySync,
+      importLocalData,
       saveClient,
       saveDocument,
       recordPayment,
@@ -436,8 +583,28 @@ export function DataProvider({ children }: {children: ReactNode;}) {
       resetData,
       exportData
     }),
-    [data, saveClient, saveDocument, recordPayment, removePayment, setDocumentStatus, setArchived, duplicateDocument, convertToInvoice, saveMember, deleteMember, saveAssignment, removeAssignment, recordPayout, removePayout, saveRetainer, deleteRetainer, setRetainerStatus, collectRetainer, removeCollection, updateSettings, resetData, exportData]
+    [data, saveClient, saveDocument, recordPayment, removePayment, setDocumentStatus, setArchived, duplicateDocument, convertToInvoice, saveMember, deleteMember, saveAssignment, removeAssignment, recordPayout, removePayout, saveRetainer, deleteRetainer, setRetainerStatus, collectRetainer, removeCollection, updateSettings, resetData, exportData, syncStatus, syncError, lastSyncedAt, retrySync, importLocalData]
   );
+
+  if (isSupabaseConfigured && user && loadState !== 'ready') {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-canvas px-6 text-center">
+        {loadState === 'error' ?
+        <>
+            <p className="text-base font-semibold text-ink">Couldn’t load your data</p>
+            <p className="max-w-md text-sm text-ink-muted">{loadError}</p>
+            <p className="max-w-md text-xs text-ink-muted">Check your internet connection, and that the database tables from supabase/schema.sql exist.</p>
+            <Button onClick={() => void loadAll()}>Try again</Button>
+          </> :
+
+        <>
+            <Loader2Icon className="h-6 w-6 animate-spin text-ink-muted" aria-hidden />
+            <p className="text-sm text-ink-muted">Loading your workspace…</p>
+          </>
+        }
+      </div>);
+
+  }
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }

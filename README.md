@@ -10,3 +10,7 @@
 - **Login**: new split-screen design, show/hide password, "remember my email" (the password is never stored).
 - Existing browser backups still load; new sections start empty.
 - `data/supabaseSchema.ts` now also contains tables for team, payouts, maintenance plans and collections.
+
+## v4 — Supabase storage
+The app now stores all data in Supabase when `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set (see `SUPABASE_SETUP.md`).
+Without them it falls back to browser-only prototype storage. Schema: `supabase/schema.sql`.
