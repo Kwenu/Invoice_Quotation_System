@@ -195,13 +195,13 @@ begin
   end loop;
 end $$;
 
--- invoices/quotations: no delete (archive instead). history: insert + read only.
+-- invoices/quotations can be deleted from the app (cancel/archive keep a record instead). History is append-only; it is removed only together with its document.
 drop policy if exists admin_rw on public.documents;
 create policy admin_rw on public.documents for all to authenticated using (public.is_admin()) with check (public.is_admin());
 drop policy if exists admin_rw on public.document_history;
 create policy admin_rw on public.document_history for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
-revoke delete on public.documents from authenticated;
+grant delete on public.documents to authenticated;
 revoke update, delete on public.document_history from authenticated;
 
 -- the public (anon) key must never reach any table

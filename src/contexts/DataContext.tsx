@@ -17,7 +17,7 @@ import { calculateTotals } from '../utils/calculations';
 import { cloneAsDraft, documentTypeLabel, invoiceFromQuotation } from '../utils/documentFactory';
 import { formatMoney } from '../utils/format';
 import { createId } from '../utils/id';
-import { allocateNumber } from '../utils/numbering';
+import { allocateNumber, isLatestNumber } from '../utils/numbering';
 import { createEmptyData, loadPrototypeSync, prototypeRepository, readLocalPrototypeData, resetPrototypeData, type AppData, type DataRepository } from '../utils/repository';
 import { statusMeta } from '../utils/status';
 
@@ -45,6 +45,8 @@ interface DataContextValue {
   removePayment: (docId: string, paymentId: string) => void;
   setDocumentStatus: (docId: string, status: StoredStatus) => void;
   setArchived: (docId: string, archived: boolean) => void;
+  /** Permanently removes a document with its payments and history. */
+  deleteDocument: (docId: string, options?: {reuseNumber?: boolean;}) => void;
   duplicateDocument: (docId: string) => LingoDocument | null;
   convertToInvoice: (quotationId: string) => LingoDocument | null;
   saveMember: (input: MemberInput) => TeamMember;
@@ -364,6 +366,50 @@ export function DataProvider({ children }: {children: ReactNode;}) {
     [mutateDocument]
   );
 
+
+  const deleteDocument = useCallback(
+    (docId: string, options?: {reuseNumber?: boolean;}) => {
+      const c = dataRef.current;
+      const target = c.documents.find((d) => d.id === docId);
+      if (!target) return;
+      const now = new Date().toISOString();
+
+      // Hand the number back only if it was the latest one issued, so numbers never collide.
+      let settings = c.settings;
+      const config = settings.numbering[target.templateId];
+      if (options?.reuseNumber && isLatestNumber(config, target.number, target.issueDate)) {
+        settings = {
+          ...settings,
+          numbering: { ...settings.numbering, [target.templateId]: { ...config, nextNumber: config.nextNumber - 1 } }
+        };
+      }
+
+      // Keep related records consistent.
+      const documents = c.documents.
+      filter((d) => d.id !== docId).
+      map((d) => {
+        if (d.convertedInvoiceId === docId) {
+          return {
+            ...d,
+            status: d.status === 'converted' ? 'accepted' as const : d.status,
+            convertedInvoiceId: undefined,
+            updatedAt: now,
+            history: [...d.history, historyEntry('Invoice deleted', `Invoice ${target.number} was deleted — quotation is ready to convert again`)]
+          };
+        }
+        if (d.sourceQuotationId === docId) return { ...d, sourceQuotationId: undefined, updatedAt: now };
+        return d;
+      });
+
+      // Team portions that followed this invoice become manual projects with the same value.
+      const total = calculateTotals(target).total;
+      const assignments = c.assignments.map((a) => a.documentId === docId ? { ...a, documentId: null, baseAmount: total } : a);
+
+      commit({ ...c, settings, documents, assignments });
+    },
+    [commit]
+  );
+
   const duplicateDocument = useCallback(
     (docId: string) => {
       const source = dataRef.current.documents.find((d) => d.id === docId);
@@ -566,6 +612,7 @@ export function DataProvider({ children }: {children: ReactNode;}) {
       removePayment,
       setDocumentStatus,
       setArchived,
+      deleteDocument,
       duplicateDocument,
       convertToInvoice,
       saveMember,
@@ -583,7 +630,7 @@ export function DataProvider({ children }: {children: ReactNode;}) {
       resetData,
       exportData
     }),
-    [data, saveClient, saveDocument, recordPayment, removePayment, setDocumentStatus, setArchived, duplicateDocument, convertToInvoice, saveMember, deleteMember, saveAssignment, removeAssignment, recordPayout, removePayout, saveRetainer, deleteRetainer, setRetainerStatus, collectRetainer, removeCollection, updateSettings, resetData, exportData, syncStatus, syncError, lastSyncedAt, retrySync, importLocalData]
+    [data, saveClient, saveDocument, recordPayment, removePayment, setDocumentStatus, setArchived, deleteDocument, duplicateDocument, convertToInvoice, saveMember, deleteMember, saveAssignment, removeAssignment, recordPayout, removePayout, saveRetainer, deleteRetainer, setRetainerStatus, collectRetainer, removeCollection, updateSettings, resetData, exportData, syncStatus, syncError, lastSyncedAt, retrySync, importLocalData]
   );
 
   if (isSupabaseConfigured && user && loadState !== 'ready') {

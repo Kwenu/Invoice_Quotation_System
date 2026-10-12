@@ -47,11 +47,10 @@ export function getDocumentSummary(doc: LingoDocument): DocumentSummary {
 
 export function getEditLock(doc: LingoDocument): string | null {
   if (doc.archived) return 'Archived documents are read-only. Restore it to make changes.';
-  if (doc.status === 'cancelled') return 'Cancelled documents cannot be edited.';
+  if (doc.status === 'cancelled') return 'Cancelled documents cannot be edited. Reinstate it first, or delete it and create a new one.';
   if (doc.status === 'converted') return 'This quotation has already been converted to an invoice.';
   if (doc.status === 'accepted' || doc.status === 'rejected')
   return `This quotation was ${doc.status}. Duplicate it to prepare a revised version.`;
-  if (doc.type === 'invoice' && getEffectiveStatus(doc) === 'paid') return 'Paid invoices are locked to protect your records.';
   return null;
 }
 

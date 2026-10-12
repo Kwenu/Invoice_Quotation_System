@@ -276,10 +276,11 @@ export async function saveToSupabase(prev: AppData, next: AppData): Promise<void
   await remove('retainer_collections', removedCols);
   await remove('retainers', retainers.removedIds);
 
-  // 6 · removed clients last (documents keep their own snapshot of the client)
+  // 6 · deleted documents (their payments and history are removed by the database; linked rows were already updated above)
+  await remove('documents', docs.removedIds);
+
+  // 7 · removed clients last (documents keep their own snapshot of the client)
   await remove('clients', clients.removedIds);
-  // Documents are never deleted by the app (they are archived); deletions are not sent on purpose.
-  void docs.removedIds;
 }
 
 /** Same shape as an empty database — the starting point when importing local data. */

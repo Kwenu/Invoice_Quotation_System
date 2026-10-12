@@ -21,7 +21,7 @@ export function TemplateDefaultsPanel({ value, onChange }: PanelProps) {
         const d = value.templates[t.templateId];
         const isQuote = t.type === 'quotation';
         return (
-          <SettingsGroup key={t.templateId} title={t.label} description={`Default wording for new documents (reference ${t.reference}).`}>
+          <SettingsGroup key={t.templateId} title={t.label} description={`Default wording for new documents.`}>
             <div className="grid gap-4 sm:grid-cols-2">
               <TextAreaField label="Notes" containerClassName="sm:col-span-2" rows={2} value={d.notes} onChange={(e) => set(t.templateId, { notes: e.target.value })} />
               <TextAreaField

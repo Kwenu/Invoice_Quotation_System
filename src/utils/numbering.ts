@@ -24,3 +24,9 @@ issueDate?: string)
   }
   return { number: candidate, nextNumber: sequence + 1 };
 }
+
+/** True when `number` is the most recently allocated number of its series — safe to hand out again after deleting that document. */
+export function isLatestNumber(config: NumberingConfig | undefined, number: string, issueDate?: string): boolean {
+  if (!config || config.nextNumber <= 1) return false;
+  return number === formatDocumentNumber(config, config.nextNumber - 1, issueDate);
+}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArrowRightLeftIcon, BanIcon, CheckCircle2Icon, SendIcon, WalletIcon, XCircleIcon } from 'lucide-react';
+import { ArrowRightLeftIcon, BanIcon, CheckCircle2Icon, RotateCcwIcon, SendIcon, WalletIcon, XCircleIcon } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import type { LingoDocument } from '../../types/document';
 import { formatDisplayDate, formatMoney } from '../../utils/format';
@@ -93,8 +93,11 @@ export function DocumentStatusPanel({ doc }: {doc: LingoDocument;}) {
           {!isInvoice && doc.status === 'accepted' &&
         <Button variant="brand" icon={ArrowRightLeftIcon} onClick={handleConvert}>Convert to invoice</Button>
         }
-          {isInvoice && doc.status !== 'cancelled' && status !== 'paid' && totals.paid === 0 &&
+          {isInvoice && doc.status !== 'cancelled' &&
         <Button variant="ghost" icon={BanIcon} onClick={() => setConfirmCancel(true)}>Cancel invoice</Button>
+        }
+          {isInvoice && doc.status === 'cancelled' &&
+        <Button variant="secondary" icon={RotateCcwIcon} onClick={() => (setDocumentStatus(doc.id, 'sent'), toast.success(`${doc.number} reinstated`))}>Reinstate invoice</Button>
         }
         </div>
       }
@@ -120,7 +123,9 @@ export function DocumentStatusPanel({ doc }: {doc: LingoDocument;}) {
       <ConfirmDialog
         open={confirmCancel}
         title={`Cancel ${doc.number}?`}
-        description="The invoice stays on record with its number but is excluded from outstanding balances. This can't be undone."
+        description={totals.paid > 0 ?
+        `${formatMoney(totals.paid, currency)} has been recorded as paid on this invoice. The invoice and its payments stay on record, but it will no longer count as income or as an outstanding balance. You can reinstate it later.` :
+        'The invoice stays on record with its number but is excluded from outstanding balances. You can reinstate it later.'}
         confirmLabel="Cancel invoice"
         tone="danger"
         onCancel={() => setConfirmCancel(false)}

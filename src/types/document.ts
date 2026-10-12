@@ -135,5 +135,4 @@ export interface TemplateAssignment {
   type: DocumentType;
   templateId: TemplateId;
   label: string;
-  reference: string;
 }

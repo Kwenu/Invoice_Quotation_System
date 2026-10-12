@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'reac
 import { toast } from 'sonner';
 import { ArchiveIcon, ArchiveRestoreIcon, ArrowLeftIcon, CopyIcon, DownloadIcon, FileXIcon, PencilIcon, PrinterIcon, Trash2Icon } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { DeleteDocumentDialog } from '../components/documents/DeleteDocumentDialog';
 import { DocumentPreview } from '../components/documents/DocumentPreview';
 import { DocumentStatusPanel } from '../components/documents/DocumentStatusPanel';
 import { ExportHost } from '../components/documents/ExportHost';
@@ -27,6 +28,7 @@ export function DocumentView() {
   const doc = documents.find((d) => d.id === id);
   const { exportRef, busy, download, print } = usePdfExport();
   const [voidPaymentId, setVoidPaymentId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const fileName = doc ? doc.number : 'document';
 
   useEffect(() => {
@@ -102,6 +104,7 @@ export function DocumentView() {
           <Button variant="secondary" icon={doc.archived ? ArchiveRestoreIcon : ArchiveIcon} onClick={() => (setArchived(doc.id, !doc.archived), toast.success(doc.archived ? 'Restored' : 'Archived'))}>
             {doc.archived ? 'Restore' : 'Archive'}
           </Button>
+          <Button variant="danger" icon={Trash2Icon} onClick={() => setDeleting(true)}>Delete</Button>
           <Button variant="secondary" icon={PrinterIcon} onClick={print}>Print</Button>
           <Button icon={DownloadIcon} loading={busy} onClick={() => download(fileName)}>
             {busy ? 'Generating…' : 'Download PDF'}
@@ -153,6 +156,8 @@ export function DocumentView() {
           </section>
         </div>
       </div>
+
+      <DeleteDocumentDialog doc={deleting ? doc : null} onClose={() => setDeleting(false)} onDeleted={() => navigate('/documents', { replace: true })} />
 
       <ExportHost ref={exportRef} doc={doc} settings={settings} />
 

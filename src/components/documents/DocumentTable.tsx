@@ -12,6 +12,7 @@ import {
   HistoryIcon,
   PencilIcon,
   PrinterIcon,
+  Trash2Icon,
   WalletIcon } from
 'lucide-react';
 import { useData } from '../../contexts/DataContext';
@@ -21,6 +22,7 @@ import { formatDisplayDate, formatMoney } from '../../utils/format';
 import { getDocumentSummary, getEditLock, isOutstanding, type DocumentSummary } from '../../utils/status';
 import { ActionMenu, type ActionMenuItem } from '../ui/ActionMenu';
 import { StatusBadge } from '../ui/StatusBadge';
+import { DeleteDocumentDialog } from './DeleteDocumentDialog';
 import { RecordPaymentModal } from './RecordPaymentModal';
 
 interface DocumentTableProps {
@@ -33,6 +35,7 @@ export function DocumentTable({ documents, emptyState, hideClient = false }: Doc
   const { settings, setArchived, duplicateDocument } = useData();
   const navigate = useNavigate();
   const [paymentFor, setPaymentFor] = useState<LingoDocument | null>(null);
+  const [deleteFor, setDeleteFor] = useState<LingoDocument | null>(null);
   const currency = settings.currencySymbol;
 
   if (!documents.length) return <>{emptyState}</>;
@@ -67,7 +70,8 @@ export function DocumentTable({ documents, emptyState, hideClient = false }: Doc
       { label: 'View history', icon: HistoryIcon, onSelect: () => navigate(`/documents/${doc.id}#history`) },
       doc.archived ?
       { label: 'Restore', icon: ArchiveRestoreIcon, onSelect: () => (setArchived(doc.id, false), toast.success(`${doc.number} restored`)) } :
-      { label: 'Archive', icon: ArchiveIcon, tone: 'danger', onSelect: () => (setArchived(doc.id, true), toast.success(`${doc.number} archived`)) }
+      { label: 'Archive', icon: ArchiveIcon, tone: 'danger', onSelect: () => (setArchived(doc.id, true), toast.success(`${doc.number} archived`)) },
+      { label: 'Delete permanently', icon: Trash2Icon, tone: 'danger', onSelect: () => setDeleteFor(doc) }
     );
     return items;
   };
@@ -160,6 +164,7 @@ export function DocumentTable({ documents, emptyState, hideClient = false }: Doc
       </ul>
 
       <RecordPaymentModal doc={paymentFor} onClose={() => setPaymentFor(null)} />
+      <DeleteDocumentDialog doc={deleteFor} onClose={() => setDeleteFor(null)} />
     </>);
 
 }

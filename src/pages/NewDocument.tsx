@@ -59,9 +59,9 @@ export function NewDocument() {
                   </span>
                 </span>
                 <span className="mt-2 text-sm text-ink-muted">{d.summary}</span>
-                <span className="mt-4 text-xs text-ink-faint">
+                {/* <span className="mt-4 text-xs text-ink-faint">
                   Templates: {templateAssignments.filter((t) => t.division === d.id).map((t) => t.reference).join(', ')}
-                </span>
+                </span> */}
               </button>);
 
           })}

@@ -14,3 +14,9 @@
 ## v4 — Supabase storage
 The app now stores all data in Supabase when `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set (see `SUPABASE_SETUP.md`).
 Without them it falls back to browser-only prototype storage. Schema: `supabase/schema.sql`.
+
+## v5 — document corrections
+- Invoices can be **edited after payments are recorded** (line items, amounts); balance, status and history update automatically.
+- **Cancel** an invoice at any stage (even after payment) and **Reinstate** it later.
+- **Delete permanently** from the document page or the row menu (type the number to confirm when it has payments or was issued).
+  Existing databases need: `grant delete on public.documents to authenticated;`

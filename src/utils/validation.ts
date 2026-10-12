@@ -42,6 +42,6 @@ export function validateDocument(doc: LingoDocument, totals: DocumentTotals): Va
   errors.adjustments = 'Give every additional charge a label.';
 
   if (doc.type === 'invoice' && totals.paid > totals.total + 0.001)
-  errors.payments = 'Recorded payments exceed the invoice total.';
+  errors.payments = 'Recorded payments exceed the new invoice total. Void or reduce a payment first, or raise the total.';
   return errors;
 }

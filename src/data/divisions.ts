@@ -16,6 +16,6 @@ export const divisions: DivisionInfo[] = [
 
 
 export const templateAssignments: TemplateAssignment[] = [
-{ division: 'startup', type: 'invoice', templateId: 'startup-invoice', label: 'Startup Invoice', reference: 'INV0113' },
-{ division: 'assignment-helpers', type: 'invoice', templateId: 'assignment-invoice', label: 'Assignment Helpers Invoice', reference: 'INV0112' },
-{ division: 'startup', type: 'quotation', templateId: 'startup-quotation', label: 'Startup Quotation', reference: 'QUT0031' }];
+{ division: 'startup', type: 'invoice', templateId: 'startup-invoice', label: 'Startup Invoice'},
+{ division: 'assignment-helpers', type: 'invoice', templateId: 'assignment-invoice', label: 'Assignment Helpers Invoice'},
+{ division: 'startup', type: 'quotation', templateId: 'startup-quotation', label: 'Startup Quotation'}];
