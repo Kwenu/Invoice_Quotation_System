@@ -10,9 +10,9 @@ export const ExportHost = forwardRef<HTMLDivElement, TemplateProps>(function Exp
       className="print-root"
       data-export-host
       aria-hidden
-      style={{ position: 'fixed', left: 0, top: 0, width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: -1 }}>
+      style={{ position: 'fixed', left: -10000, top: 0, width: 794, pointerEvents: 'none', zIndex: -1 }}>
       
-      <div ref={ref}>
+      <div ref={ref} style={{ width: 794, background: '#ffffff' }}>
         <DocumentRenderer doc={doc} settings={settings} />
       </div>
     </div>,

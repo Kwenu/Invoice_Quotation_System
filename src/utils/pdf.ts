@@ -24,12 +24,34 @@ export async function exportElementToPdf(element: HTMLElement, fileName: string)
   if (document.fonts?.ready) await document.fonts.ready;
   await waitForImages(element);
 
-  const canvas = await html2canvas(element, {
+  // html2canvas measures font baselines with a hidden 1x1 <img>. Tailwind's preflight makes every <img>
+  // `display:block`, which breaks that measurement and pushes ALL text ~0.4em too low in the PDF
+  // (logo vs "INVOICE", table headings, "Total Due" box). Keep that probe image inline while capturing.
+  const fixStyle = document.createElement('style');
+  fixStyle.setAttribute('data-pdf-metrics-fix', '');
+  fixStyle.textContent = 'img[width="1"], img[height="1"] { display: inline !important; vertical-align: baseline !important; }';
+  document.head.appendChild(fixStyle);
+
+  let canvas: HTMLCanvasElement;
+  try {
+    canvas = await html2canvas(element, {
     scale: 2,
     useCORS: true,
     backgroundColor: '#ffffff',
-    logging: false
-  });
+    logging: false,
+    width: element.offsetWidth || 794,
+    height: element.scrollHeight,
+    windowWidth: Math.max(element.offsetWidth || 794, 794),
+    scrollX: 0,
+    scrollY: 0,
+    x: 0,
+    y: 0
+    });
+  } finally {
+    fixStyle.remove();
+  }
+
+  if (!canvas.width || !canvas.height) throw new Error('Document rendered with zero size');
 
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
   const pxPerMm = canvas.width / A4_WIDTH_MM;

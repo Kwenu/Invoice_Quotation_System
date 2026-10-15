@@ -46,7 +46,7 @@ export function DocumentEditor() {
           title={id ? "Document not found" : "No template for this combination"}
           description={
             id
-              ? "It may have been removed from this browser’s prototype storage."
+              ? "It may have been removed from this browser's prototype storage."
               : "Choose a division and document type that has a configured template."
           }
           action={
