@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, FileSignatureIcon, FileTextIcon } from 'lucide-react';
-import { divisions, templateAssignments } from '../data/divisions';
+import { divisions } from '../data/divisions';
 import { Button } from '../components/ui/Button';
 import type { DivisionId, DocumentType } from '../types/document';
 import { isDocumentType, resolveTemplate } from '../utils/documentFactory';
@@ -26,16 +26,16 @@ export function NewDocument() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 lg:py-10">
+    <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 lg:py-10">
       <Link to="/documents" className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-muted hover:text-ink">
         <ArrowLeftIcon className="h-4 w-4" aria-hidden /> Documents
       </Link>
       <h1 className="mt-4 text-2xl font-semibold tracking-tight text-ink">Create a document</h1>
-      <p className="mt-1 text-sm text-ink-muted">Each division has its own template and numbering sequence.</p>
+      <p className="mt-1 text-sm text-ink-muted">Each company has its own logo and numbering sequence. Invoices and quotations are available for all three.</p>
 
       <fieldset className="mt-8">
-        <legend className="text-sm font-semibold text-ink">Business division</legend>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2" role="radiogroup">
+        <legend className="text-sm font-semibold text-ink">Company</legend>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" role="radiogroup">
           {divisions.map((d) => {
             const selected = division === d.id;
             return (
@@ -59,9 +59,6 @@ export function NewDocument() {
                   </span>
                 </span>
                 <span className="mt-2 text-sm text-ink-muted">{d.summary}</span>
-                {/* <span className="mt-4 text-xs text-ink-faint">
-                  Templates: {templateAssignments.filter((t) => t.division === d.id).map((t) => t.reference).join(', ')}
-                </span> */}
               </button>);
 
           })}

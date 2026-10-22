@@ -1,6 +1,6 @@
 import React, { type CSSProperties, type ReactNode } from 'react';
 import type { LineGroup } from '../../types/document';
-import { DOC_COLORS, TEMPLATE_GRID } from '../../utils/templateLayout';
+import { DOC_COLORS, TEMPLATE_GRID, docBarBackground } from '../../utils/templateLayout';
 import { GroupRows } from './GroupRows';
 
 interface ItemsTableProps {
@@ -9,19 +9,20 @@ interface ItemsTableProps {
   currency: string;
   showQtyAlways?: boolean;
   overlay?: ReactNode;
+  division?: string;
 }
 
 const headCell: CSSProperties = { textAlign: 'center' };
 
-export function ItemsTable({ groups, layout, currency, showQtyAlways = false, overlay }: ItemsTableProps) {
+export function ItemsTable({ groups, layout, currency, showQtyAlways = false, overlay, division }: ItemsTableProps) {
   const visible = groups.filter(
     (g) => g.kind === 'section' && g.title.trim() || g.items.some((i) => i.description.trim() || i.unitPrice > 0)
   );
   return (
     <div>
       <div
-        className="bg-lingo"
         style={{
+          background: docBarBackground(division),
           height: 45,
           display: 'grid',
           gridTemplateColumns: layout === 'qty' ? TEMPLATE_GRID.qty : TEMPLATE_GRID.price,

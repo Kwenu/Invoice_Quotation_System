@@ -27,7 +27,7 @@ export function divisionInfo(id: DivisionId) {
 }
 
 export function isDivisionId(value: string | undefined): value is DivisionId {
-  return value === 'startup' || value === 'assignment-helpers';
+  return value === 'startup' || value === 'academy' || value === 'auron';
 }
 
 export function isDocumentType(value: string | undefined): value is DocumentType {

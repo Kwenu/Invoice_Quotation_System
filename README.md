@@ -1,4 +1,4 @@
-##Lingo Invoice / Quotation Automation System that Developed by Lingo Startup Company
+##Lingo Invoice / Quotation Automation System that Developed by Lingo Startup Company for Lingo Groups (Pvt) Ltd — invoices and quotations for Lingo Startup Company, Lingo Tech Academy and Auron Wear
 
 #This help to generate a Invoice or an Quotation within 5 to 10 seconds without getting delayed to do that manually. It brings customer satisfaction and love to work with us.
 ## v3 additions

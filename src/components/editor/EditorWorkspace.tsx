@@ -227,7 +227,7 @@ export function EditorWorkspace({ initial }: { initial: LingoDocument }) {
             onChange={(groups) => update({ groups })}
             currency={currency}
             error={errors.items}
-            allowSections={doc.division === "startup"}
+            allowSections
           />
 
           <TotalsSection

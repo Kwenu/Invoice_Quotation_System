@@ -54,6 +54,7 @@ export function Dashboard() {
 
   return (
     <div className="mx-auto w-full max-w-[1400px] space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <div className="h-1 w-full rounded-full bg-lingo" aria-hidden />
       <PageHeader
         title="Dashboard"
         description="Income, payments to receive, maintenance and documents across Lingo."
@@ -89,7 +90,7 @@ export function Dashboard() {
             } />
           
         </div>
-        <section aria-label="Document totals" className="flex flex-col rounded-2xl bg-ink p-6 text-white">
+        <section aria-label="Document totals" className="flex flex-col rounded-2xl bg-gradient-to-br from-[#0B1030] via-[#1B2A6B] to-[#5B5BCB] p-6 text-white shadow-md">
           <div className="grid flex-1 grid-cols-2 gap-6">
             <div>
               <p className="flex items-center gap-1.5 text-xs text-white/70"><FileTextIcon className="h-3.5 w-3.5" aria-hidden /> Invoices</p>
@@ -110,7 +111,7 @@ export function Dashboard() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <section aria-labelledby="recent-docs" className="rounded-2xl border border-line bg-white lg:col-span-2">
+        <section aria-labelledby="recent-docs" className="rounded-2xl border border-line bg-white shadow-sm lg:col-span-2">
           <div className="flex items-center justify-between px-5 py-4">
             <h2 id="recent-docs" className="text-sm font-semibold text-ink">Recent documents</h2>
             <Link to="/documents" className="inline-flex items-center gap-1 text-sm font-medium text-ink-soft hover:text-ink">
@@ -132,7 +133,7 @@ export function Dashboard() {
           </div>
         </section>
 
-        <section aria-labelledby="recent-clients" className="rounded-2xl border border-line bg-white">
+        <section aria-labelledby="recent-clients" className="rounded-2xl border border-line bg-white shadow-sm">
           <div className="flex items-center justify-between px-5 py-4">
             <h2 id="recent-clients" className="text-sm font-semibold text-ink">Recently added clients</h2>
             <Link to="/clients" className="text-sm font-medium text-ink-soft hover:text-ink">View all</Link>

@@ -1,13 +1,14 @@
 import React, { type ReactNode } from 'react';
-import { DOC_COLORS } from '../../utils/templateLayout';
+import { DOC_COLORS, docBarBackground } from '../../utils/templateLayout';
 
 interface TemplateFrameProps {
   children: ReactNode;
   footerBrand?: string;
+  division?: string;
 }
 
 /** A4 page (794 × 1123px at 96dpi) with the gradient bars from the reference documents. Grows when content is long. */
-export function TemplateFrame({ children, footerBrand }: TemplateFrameProps) {
+export function TemplateFrame({ children, footerBrand, division }: TemplateFrameProps) {
   return (
     <div
       className="font-doc"
@@ -22,7 +23,7 @@ export function TemplateFrame({ children, footerBrand }: TemplateFrameProps) {
         overflow: 'hidden'
       }}>
       
-      <div className="bg-lingo" style={{ height: 39, flexShrink: 0 }} />
+      <div style={{ height: 39, flexShrink: 0, background: docBarBackground(division) }} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0 88px' }}>{children}</div>
       {footerBrand ?
       <div
@@ -42,7 +43,7 @@ export function TemplateFrame({ children, footerBrand }: TemplateFrameProps) {
 
       <div style={{ height: 40 }} />
       }
-      <div className="bg-lingo" style={{ height: 39, flexShrink: 0 }} />
+      <div style={{ height: 39, flexShrink: 0, background: docBarBackground(division) }} />
     </div>);
 
 }
