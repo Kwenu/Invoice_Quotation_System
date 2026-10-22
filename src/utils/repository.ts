@@ -3,6 +3,7 @@ import { seedClients } from '../data/seedClients';
 import { seedDocuments } from '../data/seedDocuments';
 import type { Client } from '../types/client';
 import type { LingoDocument } from '../types/document';
+import { migrateLegacyDocument, stripLegacySettings } from './legacy';
 import type { Retainer } from '../types/retainer';
 import type { TeamAssignment, TeamMember, TeamPayout } from '../types/team';
 import type { AppSettings } from '../types/settings';
@@ -57,13 +58,13 @@ export function createSeedData(): AppData {
 export function mergeSettings(stored: Partial<AppSettings> | undefined): AppSettings {
   const base = clone(defaultSettings);
   if (!stored) return base;
-  return {
+  return stripLegacySettings({
     ...base,
     ...stored,
     divisions: { ...base.divisions, ...stored.divisions },
     templates: { ...base.templates, ...stored.templates },
     numbering: { ...base.numbering, ...stored.numbering }
-  };
+  });
 }
 
 function readStored(): AppData | null {
@@ -75,6 +76,7 @@ function readStored(): AppData | null {
     return {
       ...parsed,
       settings: mergeSettings(parsed.settings),
+      documents: (parsed.documents ?? []).map(migrateLegacyDocument),
       // Older backups were saved before these sections existed.
       team: parsed.team ?? [],
       assignments: parsed.assignments ?? [],

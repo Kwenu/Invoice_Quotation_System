@@ -2,7 +2,7 @@ import React from 'react';
 import type { LingoDocument } from '../../types/document';
 import type { DocumentTotals } from '../../utils/calculations';
 import { formatMoney } from '../../utils/format';
-import { DOC_COLORS } from '../../utils/templateLayout';
+import { DOC_COLORS, docBarBackground } from '../../utils/templateLayout';
 
 interface TotalsLinesProps {
   doc: LingoDocument;
@@ -40,8 +40,7 @@ export function TotalsLines({ doc, totals, currency, boxLabel, boxAmount, includ
         )}
       </div>
       <div
-        className="bg-lingo"
-        style={{ marginTop: 18, minWidth: 228, padding: '10px 18px', color: '#ffffff', fontSize: 17.5, fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>
+        style={{ background: docBarBackground(doc.division), marginTop: 18, minWidth: 228, padding: '10px 18px', color: '#ffffff', fontSize: 17.5, fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>
         
         {boxLabel} : {formatMoney(boxAmount, currency)}
       </div>

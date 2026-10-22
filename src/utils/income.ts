@@ -1,4 +1,4 @@
-import type { LingoDocument } from '../types/document';
+import type { DivisionId, LingoDocument } from '../types/document';
 import type { Retainer } from '../types/retainer';
 import type { TeamPayout } from '../types/team';
 import { getDocumentSummary, isOutstanding } from './status';
@@ -47,16 +47,23 @@ export function computeIncome({ documents, retainers, payouts }: IncomeData, per
   filter((d) => d.type === 'invoice' && d.status !== 'draft' && d.status !== 'cancelled').
   map(getDocumentSummary);
 
+  const byDivision: Record<DivisionId, {income: number;billed: number;outstanding: number;}> = {
+    startup: { income: 0, billed: 0, outstanding: 0 },
+    academy: { income: 0, billed: 0, outstanding: 0 },
+    auron: { income: 0, billed: 0, outstanding: 0 }
+  };
   let invoiceIncome = 0;
   let billed = 0;
   let dueInPeriod = 0;
   let outstanding = 0;
   let overdue = 0;
   for (const s of summaries) {
-    for (const p of s.doc.payments) if (inPeriod(p.date, period)) invoiceIncome += p.amount;
-    if (inPeriod(s.doc.issueDate, period)) billed += s.totals.total;
+    const div = byDivision[s.doc.division];
+    for (const p of s.doc.payments) if (inPeriod(p.date, period)) {invoiceIncome += p.amount;if (div) div.income += p.amount;}
+    if (inPeriod(s.doc.issueDate, period)) {billed += s.totals.total;if (div) div.billed += s.totals.total;}
     if (!s.doc.archived && isOutstanding(s.status)) {
       outstanding += s.totals.balance;
+      if (div) div.outstanding += s.totals.balance;
       if (s.status === 'overdue') overdue += s.totals.balance;
       if (inPeriod(s.doc.dueDate, period)) dueInPeriod += s.totals.balance;
     }
@@ -65,11 +72,17 @@ export function computeIncome({ documents, retainers, payouts }: IncomeData, per
   let maintenanceIncome = 0;
   for (const r of retainers) for (const c of r.collections) if (inPeriod(c.receivedDate, period)) maintenanceIncome += c.amount;
 
+  // Maintenance only belongs to Lingo Startup Company.
+  byDivision.startup.income += maintenanceIncome;
+
+  // "Maintenance expected" covers just ONE month: the selected month, or the current month for year / all-time views.
+  const sameMonth = Boolean(period.from && period.to && period.from.slice(0, 7) === period.to.slice(0, 7));
+  const expectedMonth = sameMonth ? period : monthRange(Number(today.slice(0, 4)), Number(today.slice(5, 7)) - 1);
   let maintenanceExpected = 0;
   let maintenanceOverdue = 0;
   for (const r of retainers) {
     if (r.status !== 'active') continue;
-    maintenanceExpected += occurrencesInRange(r, period.from && period.from > today ? period.from : today, period.to).length * r.amount;
+    maintenanceExpected += occurrencesInRange(r, expectedMonth.from, expectedMonth.to).length * r.amount;
     if (r.nextDueDate < today) maintenanceOverdue += r.amount;
   }
 
@@ -84,7 +97,9 @@ export function computeIncome({ documents, retainers, payouts }: IncomeData, per
     overdue,
     dueInPeriod,
     maintenanceExpected,
+    maintenanceExpectedLabel: expectedMonth.label,
     maintenanceOverdue,
+    byDivision,
     payoutsPaid,
     net: income - payoutsPaid
   };

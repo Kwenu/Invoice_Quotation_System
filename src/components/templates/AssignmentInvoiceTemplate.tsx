@@ -15,7 +15,7 @@ export function AssignmentInvoiceTemplate({ doc, settings }: TemplateProps) {
   const currency = settings.currencySymbol;
   const division = settings.divisions[doc.division];
   return (
-    <TemplateFrame footerBrand={division.brandLine}>
+    <TemplateFrame footerBrand={division.brandLine} division={doc.division}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 66 }}>
         <div style={{ marginLeft: -8 }}>
           <LingoLogo width={242} />
@@ -24,7 +24,7 @@ export function AssignmentInvoiceTemplate({ doc, settings }: TemplateProps) {
       </div>
       <InvoicePartyRow doc={doc} total={totals.total} currency={currency} marginTop={62} />
       <div style={{ marginTop: 50 }}>
-        <ItemsTable groups={doc.groups} layout="qty" currency={currency} showQtyAlways overlay={<AssignmentWatermark />} />
+        <ItemsTable groups={doc.groups} layout="qty" currency={currency} showQtyAlways division={doc.division} overlay={<AssignmentWatermark division={doc.division} />} />
       </div>
       <InvoiceSummary doc={doc} totals={totals} currency={currency} />
       <NotesSignature

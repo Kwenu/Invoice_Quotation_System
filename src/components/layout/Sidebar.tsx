@@ -7,7 +7,7 @@ import { navigationItems } from '../../data/navigation';
 import { initials } from '../../utils/format';
 import { buttonClasses } from '../ui/buttonStyles';
 import { IconButton } from '../ui/IconButton';
-import { LingoLogo } from '../ui/LingoLogo';
+import { GroupLogo } from '../ui/GroupLogo';
 import { NotificationBell } from './NotificationBell';
 
 interface SidebarProps {
@@ -51,8 +51,8 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   if (collapsed) {
     return (
       <div className="flex h-full w-full flex-col items-center gap-2 py-4">
-        <Link to="/" aria-label="Lingo billing home" className="mb-2 inline-block">
-          <LingoLogo width={40} />
+        <Link to="/" aria-label="Lingo Groups billing home" className="mb-2 inline-block">
+          <GroupLogo width={40} variant="mark" />
         </Link>
         <Link to="/documents/new" aria-label="New document" title="New document" className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-ink text-white transition-colors hover:bg-ink-soft">
           <PlusIcon className="h-4 w-4" aria-hidden />
@@ -80,11 +80,11 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
 
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="px-5 pb-5 pt-6">
-        <Link to="/" aria-label="Lingo billing home" className="inline-block">
-          <LingoLogo width={104} />
+      <div className="flex flex-col items-center border-b border-line bg-gradient-to-b from-indigo-50 to-white px-5 pb-5 pt-6 text-center">
+        <Link to="/" aria-label="Lingo Groups billing home" className="inline-block">
+          <GroupLogo width={132} />
         </Link>
-        <p className="mt-2 text-xs font-medium text-ink-muted">Invoices &amp; Quotations</p>
+        <p className="mt-2 text-xs font-medium text-indigo-700">Invoices &amp; Quotations</p>
       </div>
       <div className="flex items-center justify-between px-3 pb-2">
         {onToggle ?
@@ -110,7 +110,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
           end={item.end}
           className={({ isActive }) =>
           `flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors duration-150 ${
-          isActive ? 'bg-ink text-white' : 'text-ink-soft hover:bg-canvas hover:text-ink'}`
+          isActive ? 'bg-gradient-to-r from-[#0546A9] to-[#5B5BCB] text-white shadow-sm' : 'text-ink-soft hover:bg-indigo-50 hover:text-ink'}`
 
           }>
           

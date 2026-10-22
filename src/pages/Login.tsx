@@ -4,16 +4,16 @@ import { motion } from 'framer-motion';
 import { AlertCircleIcon, BellRingIcon, EyeIcon, EyeOffIcon, FileTextIcon, LockIcon, RepeatIcon, TrendingUpIcon, UserCogIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
-import { LingoLogo } from '../components/ui/LingoLogo';
+import { GroupLogo } from '../components/ui/GroupLogo';
 import { TextField } from '../components/ui/TextField';
 
 const REMEMBER_KEY = 'lingo-billing:remembered-email';
 
 const features = [
 { icon: FileTextIcon, title: 'Invoices & quotations', text: 'Branded documents in seconds, exported as PDF.' },
-{ icon: TrendingUpIcon, title: 'Income at a glance', text: 'Monthly income, payments to receive, net after payouts.' },
+{ icon: TrendingUpIcon, title: 'Income at a glance', text: 'Income for each company, payments to receive and maintenance.' },
 { icon: RepeatIcon, title: 'Maintenance tracking', text: 'Recurring client charges with reminders before they fall due.' },
-{ icon: UserCogIcon, title: 'Team payouts', text: 'Each member’s portion, payouts and share of company income.' }];
+{ icon: UserCogIcon, title: 'Team payouts', text: 'Each member’s portion and payouts for Lingo Startup.' }];
 
 
 const ease = [0.23, 1, 0.32, 1] as const;
@@ -64,7 +64,7 @@ export function Login() {
   return (
     <div className="grid min-h-screen w-full bg-white lg:grid-cols-[1.1fr_1fr]">
       {/* Brand panel */}
-      <aside className="relative hidden overflow-hidden bg-[#0B1030] text-white lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
+      <aside className="relative hidden overflow-hidden bg-gradient-to-br from-[#070B24] via-[#0B1030] to-[#1B1F5E] text-white lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <motion.div
             className="absolute -left-24 -top-24 h-[28rem] w-[28rem] rounded-full bg-[#0546A9] opacity-60 blur-3xl"
@@ -89,7 +89,7 @@ export function Login() {
 
         <div className="relative">
           <span className="inline-block rounded-xl bg-white px-4 py-3">
-            <LingoLogo width={110} />
+            <GroupLogo width={150} />
           </span>
         </div>
 
@@ -113,7 +113,7 @@ export function Login() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease, delay: 0.15 + i * 0.08 }}>
               
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#3B82F6] to-[#C76BE6]">
                   <f.icon className="h-4 w-4" aria-hidden />
                 </span>
                 <p className="mt-3 text-sm font-semibold">{f.title}</p>
@@ -130,17 +130,17 @@ export function Login() {
       </aside>
 
       {/* Form panel */}
-      <main className="flex flex-col">
+      <main className="flex flex-col bg-gradient-to-br from-white via-indigo-50/60 to-fuchsia-50/50">
         <div className="h-1.5 w-full bg-lingo lg:hidden" />
         <div className="flex flex-1 items-center justify-center px-6 py-12">
           <motion.div
-            className="w-full max-w-sm"
+            className="w-full max-w-sm rounded-3xl border border-white bg-white/80 p-8 shadow-xl shadow-indigo-200/50 backdrop-blur"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, ease }}>
             
-            <div className="lg:hidden"><LingoLogo width={116} /></div>
-            <h1 className="mt-8 text-3xl font-semibold tracking-tight text-ink lg:mt-0">Welcome back</h1>
+            <div className="lg:hidden"><GroupLogo width={132} /></div>
+            <h1 className="mt-8 bg-gradient-to-r from-[#0546A9] to-[#9B5BD9] bg-clip-text text-3xl font-semibold tracking-tight text-transparent lg:mt-0">Welcome back</h1>
             <p className="mt-1.5 text-sm text-ink-muted">Sign in to Lingo Billing to manage invoices, clients and your team.</p>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-4" noValidate>

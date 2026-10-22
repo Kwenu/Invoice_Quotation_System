@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { MenuIcon, PlusIcon } from 'lucide-react';
 import { IconButton } from '../ui/IconButton';
-import { LingoLogo } from '../ui/LingoLogo';
+import { GroupLogo } from '../ui/GroupLogo';
 import { Sidebar } from './Sidebar';
 import { NotificationBell } from './NotificationBell';
 import { useData } from '../../contexts/DataContext';
@@ -82,8 +82,8 @@ export function AppLayout() {
       <div className={`flex min-w-0 flex-1 flex-col transition-[padding] duration-200 ${collapsed ? 'lg:pl-16' : 'lg:pl-64'}`}>
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-white px-3 lg:hidden">
           <IconButton icon={MenuIcon} label="Open navigation" onClick={() => setMobileOpen(true)} />
-          <Link to="/" aria-label="Lingo billing home">
-            <LingoLogo width={84} />
+          <Link to="/" aria-label="Lingo Groups billing home">
+            <GroupLogo width={44} variant="mark" />
           </Link>
           <div className="flex items-center gap-1">
           <NotificationBell placement="below" />

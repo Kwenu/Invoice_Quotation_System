@@ -1,7 +1,7 @@
 import React from 'react';
 import type { LingoDocument } from '../../types/document';
 import { formatDocDate, formatMoney } from '../../utils/format';
-import { DOC_COLORS } from '../../utils/templateLayout';
+import { DOC_COLORS, docAccent } from '../../utils/templateLayout';
 
 interface InvoicePartyRowProps {
   doc: LingoDocument;
@@ -17,7 +17,7 @@ export function InvoicePartyRow({ doc, total, currency, marginTop }: InvoicePart
     <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', alignItems: 'start', marginTop }}>
       <div>
         <div style={{ fontSize: 11.5, fontWeight: 700 }}>INVOICE TO :</div>
-        <div style={{ fontSize: 14.5, fontWeight: 600, color: DOC_COLORS.navy, marginTop: 6, textTransform: 'uppercase', lineHeight: 1.3 }}>
+        <div style={{ fontSize: 14.5, fontWeight: 600, color: docAccent(doc.division), marginTop: 6, textTransform: 'uppercase', lineHeight: 1.3 }}>
           {client.name || 'Client name'}
         </div>
         {extraLines.map((line) =>
@@ -34,7 +34,7 @@ export function InvoicePartyRow({ doc, total, currency, marginTop }: InvoicePart
       </div>
       <div style={{ textAlign: 'right' }}>
         <div style={{ fontSize: 11.5, fontWeight: 700 }}>TOTAL&nbsp; :</div>
-        <div style={{ fontSize: 21, fontWeight: 700, color: DOC_COLORS.navy, marginTop: 6, whiteSpace: 'nowrap' }}>
+        <div style={{ fontSize: 21, fontWeight: 700, color: docAccent(doc.division), marginTop: 6, whiteSpace: 'nowrap' }}>
           {formatMoney(total, currency)}
         </div>
       </div>

@@ -14,7 +14,7 @@ export function StartupInvoiceTemplate({ doc, settings }: TemplateProps) {
   const currency = settings.currencySymbol;
   const division = settings.divisions[doc.division];
   return (
-    <TemplateFrame>
+    <TemplateFrame division={doc.division}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 44 }}>
         <div style={{ marginLeft: -8 }}>
           <LingoLogo width={242} />
@@ -23,7 +23,7 @@ export function StartupInvoiceTemplate({ doc, settings }: TemplateProps) {
       </div>
       <InvoicePartyRow doc={doc} total={totals.total} currency={currency} marginTop={52} />
       <div style={{ marginTop: 40 }}>
-        <ItemsTable groups={doc.groups} layout="qty" currency={currency} />
+        <ItemsTable groups={doc.groups} layout="qty" currency={currency} division={doc.division} />
       </div>
       <InvoiceSummary doc={doc} totals={totals} currency={currency} />
       <NotesSignature

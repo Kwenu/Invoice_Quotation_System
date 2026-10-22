@@ -1,6 +1,13 @@
-export type DivisionId = 'startup' | 'assignment-helpers';
+/** The three trading companies under Lingo Groups. */
+export type DivisionId = 'startup' | 'academy' | 'auron';
 export type DocumentType = 'invoice' | 'quotation';
-export type TemplateId = 'startup-invoice' | 'assignment-invoice' | 'startup-quotation';
+export type TemplateId =
+'startup-invoice' |
+'startup-quotation' |
+'academy-invoice' |
+'academy-quotation' |
+'auron-invoice' |
+'auron-quotation';
 
 /** Status persisted on the record. Payment-driven states are derived, never stored. */
 export type StoredStatus = 'draft' | 'sent' | 'cancelled' | 'accepted' | 'rejected' | 'converted';
