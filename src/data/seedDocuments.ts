@@ -153,9 +153,9 @@ export const seedDocuments: LingoDocument[] = [
 {
   id: 'doc_inv_0112',
   type: 'invoice',
-  division: 'assignment-helpers',
-  templateId: 'assignment-invoice',
-  number: 'INV-AH-2026-0112',
+  division: 'startup',
+  templateId: 'startup-invoice',
+  number: 'INV-2026-0112',
   status: 'sent',
   issueDate: '2026-08-05',
   dueDate: '2026-09-04',

@@ -1,18 +1,22 @@
 import React from 'react';
 import type { TemplateProps } from '../../types/template';
-import { AssignmentInvoiceTemplate } from './AssignmentInvoiceTemplate';
-import { StartupInvoiceTemplate } from './StartupInvoiceTemplate';
-import { StartupQuotationTemplate } from './StartupQuotationTemplate';
+import { InvoiceTemplate } from './InvoiceTemplate';
+import { QuotationTemplate } from './QuotationTemplate';
 
-/** Template registry — add new division templates here. */
+/**
+ * Template registry. All companies share one invoice layout and one quotation layout;
+ * the company's logo, footer brand line, tagline and payment details come from its division settings.
+ */
 export function DocumentRenderer({ doc, settings }: TemplateProps) {
   switch (doc.templateId) {
-    case 'assignment-invoice':
-      return <AssignmentInvoiceTemplate doc={doc} settings={settings} />;
     case 'startup-quotation':
-      return <StartupQuotationTemplate doc={doc} settings={settings} />;
+    case 'academy-quotation':
+    case 'auron-quotation':
+      return <QuotationTemplate doc={doc} settings={settings} />;
     case 'startup-invoice':
+    case 'academy-invoice':
+    case 'auron-invoice':
     default:
-      return <StartupInvoiceTemplate doc={doc} settings={settings} />;
+      return <InvoiceTemplate doc={doc} settings={settings} />;
   }
 }

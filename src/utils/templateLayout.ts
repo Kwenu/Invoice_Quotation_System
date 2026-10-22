@@ -11,3 +11,10 @@ export const DOC_COLORS = {
   grey: '#5A5352',
   muted: '#6E6E6E'
 } as const;
+/** Lingo Startup keeps the brand gradient; Lingo Tech Academy and Auron Wear print in black. */
+export const docBarBackground = (division?: string): string =>
+division === 'academy' || division === 'auron' ? '#111111' : 'linear-gradient(90deg, #0546A9 0%, #5B5BCB 52%, #C76BE6 100%)';
+
+/** Accent text colour (client name, totals) — navy for Startup, black for the others. */
+export const docAccent = (division?: string): string =>
+division === 'academy' || division === 'auron' ? '#111111' : DOC_COLORS.navy;

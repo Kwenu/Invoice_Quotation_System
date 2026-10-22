@@ -5,7 +5,7 @@ export default {content: [
   theme: {
     extend: {
       colors: {
-        canvas: '#F4F5F7',
+        canvas: '#F3F4FB',
         line: { DEFAULT: '#E4E6EB', strong: '#D2D5DC' },
         ink: { DEFAULT: '#0E1016', soft: '#3A3F4B', muted: '#646A78', faint: '#9AA0AC' },
         brand: { blue: '#0B4FB3', violet: '#6556D9', magenta: '#C86AE6', tint: '#F1F0FE' },

@@ -20,7 +20,7 @@ interface OutstandingPanelProps {
 export function OutstandingPanel({ outstanding, overdueAmount, awaitingCount, segments, currency }: OutstandingPanelProps) {
   const total = segments.reduce((sum, s) => sum + s.count, 0);
   return (
-    <section aria-labelledby="outstanding-heading" className="rounded-2xl border border-line bg-white p-6">
+    <section aria-labelledby="outstanding-heading" className="rounded-2xl border border-line bg-white p-6 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 id="outstanding-heading" className="text-sm font-medium text-ink-muted">Total outstanding balance</h2>

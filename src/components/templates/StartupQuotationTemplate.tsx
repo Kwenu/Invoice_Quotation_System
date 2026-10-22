@@ -2,7 +2,7 @@ import React from 'react';
 import type { TemplateProps } from '../../types/template';
 import { calculateTotals } from '../../utils/calculations';
 import { formatDocDate } from '../../utils/format';
-import { DOC_COLORS } from '../../utils/templateLayout';
+import { DOC_COLORS, docAccent } from '../../utils/templateLayout';
 import { LingoLogo } from '../ui/LingoLogo';
 import { ItemsTable } from './ItemsTable';
 import { NotesSignature } from './NotesSignature';
@@ -19,7 +19,7 @@ export function StartupQuotationTemplate({ doc, settings }: TemplateProps) {
   const showProject = doc.display.showProjectDetails && (doc.projectName.trim() || doc.projectDescription.trim());
 
   return (
-    <TemplateFrame footerBrand={division.brandLine}>
+    <TemplateFrame footerBrand={division.brandLine} division={doc.division}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 20 }}>
         <div style={{ marginLeft: -60, marginTop: 22 }}>
           <LingoLogo width={226} />
@@ -39,7 +39,7 @@ export function StartupQuotationTemplate({ doc, settings }: TemplateProps) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'start', marginTop: 50 }}>
         <div>
           <div style={{ fontSize: 11.5, fontWeight: 700 }}>TO :</div>
-          <div style={{ fontSize: 14, fontWeight: 500, color: DOC_COLORS.navy, marginTop: 6, textTransform: 'uppercase', lineHeight: 1.3 }}>
+          <div style={{ fontSize: 14, fontWeight: 500, color: docAccent(doc.division), marginTop: 6, textTransform: 'uppercase', lineHeight: 1.3 }}>
             {client.name || 'Client name'}
           </div>
           {extraLines.map((line) =>
@@ -68,7 +68,7 @@ export function StartupQuotationTemplate({ doc, settings }: TemplateProps) {
       }
 
       <div style={{ marginTop: showProject ? 24 : 44 }}>
-        <ItemsTable groups={doc.groups} layout="price" currency={currency} />
+        <ItemsTable groups={doc.groups} layout="price" currency={currency} division={doc.division} />
       </div>
 
       {doc.display.showTotals &&

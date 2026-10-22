@@ -43,9 +43,7 @@ export function DivisionSettingsPanel({ value, onChange }: PanelProps) {
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextField label="Footer brand line" value={s.brandLine} onChange={(e) => setDivision(d.id, { brandLine: e.target.value })} hint="Printed letter-spaced at the page foot." />
                 <TextField label="Company line" value={s.companyLine} onChange={(e) => setDivision(d.id, { companyLine: e.target.value })} />
-                {d.id === 'startup' &&
-                <TextField label="Quotation tagline" containerClassName="sm:col-span-2" value={s.tagline} onChange={(e) => setDivision(d.id, { tagline: e.target.value })} />
-                }
+                <TextField label="Quotation tagline" containerClassName="sm:col-span-2" value={s.tagline} onChange={(e) => setDivision(d.id, { tagline: e.target.value })} hint="Optional. Printed in script under the logo icon at the top-right of quotations." />
               </div>
 
               <div>

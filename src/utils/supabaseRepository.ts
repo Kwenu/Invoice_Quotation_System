@@ -6,6 +6,7 @@ import type { Retainer, RetainerCollection } from '../types/retainer';
 import type { AppSettings } from '../types/settings';
 import type { TeamAssignment, TeamMember, TeamPayout } from '../types/team';
 import { calculateTotals } from './calculations';
+import { migrateLegacyDocument } from './legacy';
 import { createEmptyData, mergeSettings, type AppData, type DataRepository } from './repository';
 
 /* ───────────────────────── helpers ───────────────────────── */
@@ -90,7 +91,7 @@ function documentToRow(d: LingoDocument, clientIds: Set<string>): Row {
 }
 
 function documentFromRow(r: Row, payments: Payment[], history: HistoryEntry[]): LingoDocument {
-  return {
+  return migrateLegacyDocument({
     id: r.id, type: r.type, division: r.division, templateId: r.template_id, number: str(r.number), status: r.status,
     issueDate: str(r.issue_date), dueDate: str(r.due_date), validUntil: str(r.valid_until),
     client: r.client as ClientSnapshot,
@@ -101,7 +102,7 @@ function documentFromRow(r: Row, payments: Payment[], history: HistoryEntry[]): 
     display: r.display as DisplayOptions,
     sourceQuotationId: r.source_quotation_id ?? undefined, convertedInvoiceId: r.converted_invoice_id ?? undefined,
     archived: Boolean(r.archived), createdAt: ts(r.created_at), updatedAt: ts(r.updated_at), history
-  };
+  });
 }
 
 const paymentToRow = (docId: string, p: Payment): Row => ({
